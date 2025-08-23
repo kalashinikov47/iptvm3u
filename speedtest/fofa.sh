@@ -122,9 +122,9 @@ case $city_choice in
         ;;
     12)
         city="Fujian_114"
-        stream="rtp/239.61.2.183:9086"
+        stream="udp/239.81.0.102:4056"
         channel_key="福建电信"
-        url_fofa=$(echo  '"udpxy" && country="CN" && region="Fujian" && protocol="http"' | base64 |tr -d '\n')
+        url_fofa=$(echo  '"udpxy" && country="CN" && region="Guangxi Zhuangzu" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     13)
@@ -138,7 +138,7 @@ case $city_choice in
         city="Gansu_105"
         stream="udp/239.255.30.123:8231"
         channel_key="甘肃电信"
-        url_fofa=$(echo  '"udpxy" && country="CN" && region="Gansu" && city="Lanzhou" && protocol="http"' | base64 |tr -d '\n')
+        url_fofa=$(echo  '"udpxy" && country="CN" && region="Gansu" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     15)
