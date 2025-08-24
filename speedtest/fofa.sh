@@ -122,9 +122,9 @@ case $city_choice in
         ;;
     12)
         city="Fujian_114"
-        stream="udp/239.81.0.102:4056"
+        stream="rtp://239.61.4.176:1025"
         channel_key="福建电信"
-        url_fofa=$(echo  '"udpxy" && country="CN" && region="Guangxi Zhuangzu" && protocol="http"' | base64 |tr -d '\n')
+        url_fofa=$(echo  '"udpxy" && country="CN" && region="Fujian" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     13)
