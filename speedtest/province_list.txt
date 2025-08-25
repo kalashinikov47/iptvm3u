@@ -8,7 +8,7 @@ Guangdong Guangdong_332 udp/239.77.1.98:5146
 Henan Henan_327 rtp/239.16.20.1:10010
 Tianjin Tianjin_160 udp/225.1.2.190:5002
 Hubei Hubei_90 rtp/239.69.1.141:10482
-Fujian Fujian_114 rtp/239.61.2.183:9086
+Fujian Fujian_114 udp/233.50.201.196:5140
 Gansu Gansu_105 udp/239.255.30.123:8231"
 Hebei Hebei_333 rtp/239.253.93.134:6631
 Chongqing Chongqing rtp/235.254.199.51:7980
