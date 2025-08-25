@@ -92,7 +92,7 @@ case $city_choice in
         ;;
     12)
         city="Fujian_114"
-        stream="rtp://239.61.4.176:1025"
+        stream="udp/233.50.201.196:5140"
         channel_key="福建电信"
         ;;
     13)
