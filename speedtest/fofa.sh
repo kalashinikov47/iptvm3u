@@ -84,7 +84,7 @@ case $city_choice in
 		stream="rtp/239.49.1.10:6000"
         stream="udp/239.49.8.19:9614"
         channel_key="江苏"
-        url_fofa=$(echo  '"udpxy" && country="CN" && region="Jiangsu" && org="Chinanet" && protocol="http"' | base64 |tr -d '\n')
+        url_fofa=$(echo  '"udpxy" && country="CN" && region="Jiangsu" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     7)
