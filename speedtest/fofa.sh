@@ -33,7 +33,7 @@ if [ $# -eq 0 ]; then
 
   if [ -z "$city_choice" ]; then
       echo "未检测到输入，自动选择全部选项..."
-      city_choice=6
+      city_choice=0
   fi
 
 else
@@ -97,9 +97,10 @@ case $city_choice in
         ;;
     8)
         city="Henan_327"
+		stream="rtp/225.1.4.73:1102"
         stream="rtp/239.16.20.1:10010"
         channel_key="河南电信"
-        url_fofa=$(echo  '"udpxy" && country="CN" && region="Henan" && city="Zhengzhou"  && protocol="http"' | base64 |tr -d '\n')
+        url_fofa=$(echo  '"udpxy" && country="CN" && region="Henan" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     9)
