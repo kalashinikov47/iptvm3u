@@ -87,7 +87,7 @@ case $city_choice in
         ;;
     11)
         city="Hubei_90"
-        stream="rtp/239.69.1.141:10482"
+        stream="rtp/239.69.1.40:9880"
         channel_key="湖北电信"
         ;;
     12)
