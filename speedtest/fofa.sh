@@ -96,11 +96,10 @@ case $city_choice in
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     8)
-        city="Henan_327"
-		stream="rtp/225.1.4.73:1102"
+        city="Henan_327"		
         stream="rtp/239.16.20.1:10010"
         channel_key="河南电信"
-        url_fofa=$(echo  '"udpxy" && country="CN" && region="Henan" && protocol="http"' | base64 |tr -d '\n')
+        url_fofa=$(echo  '"udpxy" && country="CN" && region="Henan" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     9)
@@ -119,23 +118,23 @@ case $city_choice in
         ;;
     11)
         city="Hubei_90"
-        stream="rtp/239.254.96.96:8550"
+        stream="rtp/239.69.1.40:9880"
         channel_key="湖北电信"
-        url_fofa=$(echo  '"udpxy" && country="CN" && region="Hubei" && city="Wuhan" && protocol="http"' | base64 |tr -d '\n')
+        url_fofa=$(echo  '"udpxy" && country="CN" && region="Hubei" && city="Wuhan" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     12)
         city="Fujian_114"
-        stream="rtp://239.61.4.176:1025"
+        stream="rtp/239.61.2.183:9086"
         channel_key="福建电信"
-        url_fofa=$(echo  '"udpxy" && country="CN" && region="Fujian" && org="Chinanet" && protocol="http"' | base64 |tr -d '\n')
+        url_fofa=$(echo  '"udpxy" && country="CN" && region="Fujian" && org="Chinanet" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     13)
         city="Hunan_282"
-        stream="udp/239.76.252.35:9000"
+        stream="udp/239.76.246.8:1234"
         channel_key="湖南电信"
-        url_fofa=$(echo  '"udpxy" && country="CN" && region="Hunan" && protocol="http"' | base64 |tr -d '\n')
+        url_fofa=$(echo  '"udpxy" && country="CN" && region="Hunan" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     14)
