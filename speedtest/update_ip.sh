@@ -6,7 +6,7 @@ if [ $# -eq 0 ]; then
 fi
 
 region=$1
-quake360token="你的quake360token"
+quake360token="726600e4-4e72-4100-97bb-743b2426cf93"
 
 echo "===============从 fofa 检索 ip+端口================="
         url_fofa=$(echo  '"udpxy" && country="CN" && region="'$region'" && org="China Telecom Group" && protocol="http"' | base64 |tr -d '\n')
