@@ -47,7 +47,7 @@ case $city_choice in
         ;;
     3)
         city="Sichuan_333"
-        stream="udp/239.93.42.33:5140"
+        stream="udp/239.93.0.169:5140"
         channel_key="四川电信"
         ;;
     4)
@@ -61,9 +61,9 @@ case $city_choice in
         channel_key="北京电信"
         ;;
     6)
-        city="Jieyang_129"
-        stream="hls/38/index.m3u8"
-        channel_key="揭西"
+        city="Jiangsu"
+        stream="rtp/239.49.8.132:6000"
+        channel_key="江苏"
         ;;
     7)
         city="Guangdong_332"
@@ -87,27 +87,27 @@ case $city_choice in
         ;;
     11)
         city="Hubei_90"
-        stream="rtp/239.69.1.141:10482"
+        stream="rtp/239.69.1.40:9880"
         channel_key="湖北电信"
         ;;
     12)
         city="Fujian_114"
-        stream="udp/233.50.201.196:5140"
+        stream="rtp/239.61.3.61:9884"
         channel_key="福建电信"
         ;;
     13)
         city="Hunan_282"
-        stream="udp/239.76.252.35:9000"
+        stream="udp/239.76.245.115:1234"
         channel_key="湖南电信"
         ;;
     14)
         city="Gansu_105"
-        stream="udp/239.255.30.123:8231"
+        stream="udp/239.81.0.107:4056"
         channel_key="甘肃电信"
         ;;
     15)
         city="Hebei_313"
-        stream="rtp/239.253.93.134:6631"
+        stream="udp/239.11.0.65:5140"
         channel_key="河北联通"
         ;;
     0)
