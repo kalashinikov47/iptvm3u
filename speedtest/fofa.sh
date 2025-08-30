@@ -144,7 +144,7 @@ case $city_choice in
         city="Hebei_313"
         stream="rtp/239.253.92.84:8015"
         channel_key="河北联通"
-        url_fofa=$(echo '"udpxy" && country="CN" && region="Hebei" && protocol="http"' | base64 |tr -d '\n')
+        url_fofa=$(echo  '"udpxy" && country="CN" && region="Hebei" && asn="4837" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     0)
