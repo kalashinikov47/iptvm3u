@@ -107,7 +107,7 @@ case $city_choice in
         ;;
     15)
         city="Hebei_313"
-        stream="udp/239.11.0.65:5140"
+        stream="rtp/239.253.92.84:8015"
         channel_key="河北联通"
         ;;
     0)
