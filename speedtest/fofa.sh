@@ -46,7 +46,7 @@ case $city_choice in
     1)
         city="Shanghai_103"
         stream="udp/239.45.1.4:5140"
-	channel_key="上海"
+        channel_key="上海"
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Shanghai" && asn="4812" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
@@ -80,7 +80,7 @@ case $city_choice in
         ;;
     6)
         city="Jiangsu"
-		stream="rtp/239.49.8.132:6000"		
+        stream="rtp/239.49.8.132:6000"		
         channel_key="江苏"
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Jiangsu" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
@@ -138,7 +138,8 @@ case $city_choice in
         city="Gansu_105"
         stream="udp/239.81.0.107:4056"
         channel_key="甘肃电信"
-        url_fofa=$(echo  '"udpxy" && country="CN" &&  region="Guangxi Zhuangzu" && ASN="4134" && protocol="http"' | base64 |tr -d '\n')
+        # 修正甘肃电信的FOFA查询条件
+        url_fofa=$(echo  '"udpxy" && country="CN" && region="Gansu" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     15)
@@ -155,11 +156,51 @@ case $city_choice in
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Zhejiang" && asn="4837" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
-	0)
-        # 如果选择是“全部选项”，则逐个处理每个选项
+    0)
+        # 如果选择是"全部选项"，则逐个处理每个选项
+        echo "开始处理所有城市..."
         for option in {1..16}; do
-          bash  "$0" $option  # 假定fofa.sh是当前脚本的文件名，$option将递归调用
+          echo "正在处理城市选项 $option/16..."
+          # 使用后台进程并行处理，提高效率
+          bash "$0" $option &
         done
+        # 等待所有后台进程完成
+        wait
+        echo "所有城市处理完成，开始合并结果..."
+        
+        # 合并所有城市的txt文件
+        echo "上海电信,#genre#" > zubo_fofa.txt
+        [ -f "txt/Shanghai_103.txt" ] && cat "txt/Shanghai_103.txt" >> zubo_fofa.txt
+        echo "江苏,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Jiangsu.txt" ] && cat "txt/Jiangsu.txt" >> zubo_fofa.txt
+        echo "北京联通,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Beijing_liantong_145.txt" ] && cat "txt/Beijing_liantong_145.txt" >> zubo_fofa.txt
+        echo "天津联通,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Tianjin_160.txt" ] && cat "txt/Tianjin_160.txt" >> zubo_fofa.txt
+        echo "河南电信,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Henan_327.txt" ] && cat "txt/Henan_327.txt" >> zubo_fofa.txt
+        echo "山西电信,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Shanxi_117.txt" ] && cat "txt/Shanxi_117.txt" >> zubo_fofa.txt
+        echo "广东电信,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Guangdong_332.txt" ] && cat "txt/Guangdong_332.txt" >> zubo_fofa.txt
+        echo "四川电信,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Sichuan_333.txt" ] && cat "txt/Sichuan_333.txt" >> zubo_fofa.txt
+        echo "浙江电信,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Zhejiang_120.txt" ] && cat "txt/Zhejiang_120.txt" >> zubo_fofa.txt
+        echo "湖北电信,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Hubei_90.txt" ] && cat "txt/Hubei_90.txt" >> zubo_fofa.txt
+        echo "福建电信,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Fujian_114.txt" ] && cat "txt/Fujian_114.txt" >> zubo_fofa.txt
+        echo "湖南电信,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Hunan_282.txt" ] && cat "txt/Hunan_282.txt" >> zubo_fofa.txt
+        echo "甘肃电信,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Gansu_105.txt" ] && cat "txt/Gansu_105.txt" >> zubo_fofa.txt
+        echo "河北联通,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Hebei_313.txt" ] && cat "txt/Hebei_313.txt" >> zubo_fofa.txt
+        echo "浙江联通,#genre#" >> zubo_fofa.txt
+        [ -f "txt/Zhejiang_121.txt" ] && cat "txt/Zhejiang_121.txt" >> zubo_fofa.txt
+        
+        echo "所有城市结果已合并到 zubo_fofa.txt"
         exit 0
         ;;
 
@@ -169,30 +210,35 @@ case $city_choice in
         ;;
 esac
 
-
-
 # 使用城市名作为默认文件名，格式为 CityName.ip
 ipfile="ip/${city}.ip"
 only_good_ip="ip/${city}.onlygood.ip"
 rm -f $only_good_ip
 # 搜索最新 IP
 echo "===============从 fofa 检索 ip+端口================="
-curl -o test.html "$url_fofa"
+curl -s -o test.html "$url_fofa"
 #echo $url_fofa
 echo "$ipfile"
 grep -E '^\s*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+$' test.html | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+' > "$ipfile"
 rm -f test.html
+
+# 检查是否有找到IP
+if [ ! -s "$ipfile" ]; then
+    echo "警告：未从FOFA找到任何IP地址，跳过测试"
+    exit 0
+fi
+
 # 遍历文件 A 中的每个 IP 地址
 while IFS= read -r ip; do
     # 尝试连接 IP 地址和端口号，并将输出保存到变量中
     tmp_ip=$(echo -n "$ip" | sed 's/:/ /')
-    echo "nc -w 1 -v -z $tmp_ip 2>&1"
-    output=$(nc -w 1 -v -z $tmp_ip 2>&1)
+    echo "测试连接: nc -w 1 -v -z $tmp_ip"
+    output=$(timeout 5 nc -w 1 -v -z $tmp_ip 2>&1)
     echo $output    
     # 如果连接成功，且输出包含 "succeeded"，则将结果保存到输出文件中
     if [[ $output == *"succeeded"* ]]; then
         # 使用 awk 提取 IP 地址和端口号对应的字符串，并保存到输出文件中
-        echo "$output" | grep "succeeded" | awk -v ip="$ip" '{print ip}' >> "$only_good_ip"
+        echo "$ip" >> "$only_good_ip"
     fi
 done < "$ipfile"
 
@@ -206,6 +252,11 @@ fi
 
 lines=$(wc -l < "$only_good_ip")
 echo "【$only_good_ip】内 ip 共计 $lines 个"
+
+if [ $lines -eq 0 ]; then
+    echo "警告：没有可用的IP地址，跳过速度测试"
+    exit 0
+fi
 
 line_i=0
 mkdir -p tmpip
@@ -221,16 +272,24 @@ done < "$only_good_ip"
 
 line_i=0
 for temp_file in tmpip/ip_*.txt; do
-      ((line_i++))
-     ip=$(<"$temp_file")  # 从临时文件中读取 IP 地址
-     a=$(./speed.sh "$ip" "$stream")
-     echo "第 $line_i/$lines 个：$ip $a"
-     echo "$ip $a" >> "speedtest_${city}_$time.log"
+    ((line_i++))
+    ip=$(<"$temp_file")  # 从临时文件中读取 IP 地址
+    a=$(./speed.sh "$ip" "$stream")
+    echo "第 $line_i/$lines 个：$ip $a"
+    echo "$ip $a" >> "speedtest_${city}_$time.log"
 done
-rm -rf tmpip/*
+rm -rf tmpip
 
 awk '/M|k/{print $2"  "$1}' "speedtest_${city}_$time.log" | sort -n -r >"result/result_fofa_${city}.txt"
 cat "result/result_fofa_${city}.txt"
+
+# 检查是否有有效结果
+if [ ! -s "result/result_fofa_${city}.txt" ]; then
+    echo "警告：没有有效的速度测试结果"
+    rm -f "speedtest_${city}_$time.log"
+    exit 0
+fi
+
 ip1=$(awk 'NR==1{print $2}' result/result_fofa_${city}.txt)
 ip2=$(awk 'NR==2{print $2}' result/result_fofa_${city}.txt)
 ip3=$(awk 'NR==3{print $2}' result/result_fofa_${city}.txt)
@@ -239,48 +298,47 @@ rm -f "speedtest_${city}_$time.log"
 # 用 3 个最快 ip 生成对应城市的 txt 文件
 program="template/template_${city}.txt"
 
-sed "s/ipipip/$ip1/g" "$program" > tmp1.txt
-sed "s/ipipip/$ip2/g" "$program" > tmp2.txt
-sed "s/ipipip/$ip3/g" "$program" > tmp3.txt
-cat tmp1.txt tmp2.txt tmp3.txt > "txt/fofa_${city}.txt"
+if [ -f "$program" ]; then
+    sed "s/ipipip/$ip1/g" "$program" > tmp1.txt
+    sed "s/ipipip/$ip2/g" "$program" > tmp2.txt
+    sed "s/ipipip/$ip3/g" "$program" > tmp3.txt
+    cat tmp1.txt tmp2.txt tmp3.txt > "txt/fofa_${city}.txt"
+    rm -rf tmp1.txt tmp2.txt tmp3.txt
+else
+    echo "警告：模板文件 $program 不存在，跳过生成城市文件"
+fi
 
-rm -rf tmp1.txt tmp2.txt tmp3.txt
-
-
-#--------------------合并所有城市的txt文件为:   zubo_fofa.txt-----------------------------------------
-
-echo "上海电信,#genre#" >zubo_fofa.txt
-cat txt/Shanghai_103.txt >>zubo_fofa.txt
-echo "江苏,#genre#" >>zubo_fofa.txt
-cat txt/Jiangsu.txt >>zubo_fofa.txt
-#echo "北京电信,#genre#" >>zubo_fofa.txt
-#cat txt/Beijing_dianxin_186.txt >>zubo_fofa.txt
-echo "北京联通,#genre#" >>zubo_fofa.txt
-cat txt/Beijing_liantong_145.txt >>zubo_fofa.txt
-echo "天津联通,#genre#" >>zubo_fofa.txt
-cat txt/Tianjin_160.txt >>zubo_fofa.txt
-echo "河南电信,#genre#" >>zubo_fofa.txt
-cat txt/Henan_327.txt >>zubo_fofa.txt
-echo "山西电信,#genre#" >>zubo_fofa.txt
-cat txt/Shanxi_117.txt >>zubo_fofa.txt
-echo "广东电信,#genre#" >>zubo_fofa.txt
-cat txt/Guangdong_332.txt >>zubo_fofa.txt
-echo "四川电信,#genre#" >>zubo_fofa.txt
-cat txt/Sichuan_333.txt >>zubo_fofa.txt
-echo "浙江电信,#genre#" >>zubo_fofa.txt
-cat txt/Zhejiang_120.txt >>zubo_fofa.txt
-echo "湖北电信,#genre#" >>zubo_fofa.txt
-cat txt/Hubei_90.txt >>zubo_fofa.txt
-echo "福建电信,#genre#" >>zubo_fofa.txt
-cat txt/Fujian_114.txt >>zubo_fofa.txt
-echo "湖南电信,#genre#" >>zubo_fofa.txt
-cat txt/Hunan_282.txt >>zubo_fofa.txt
-echo "甘肃电信,#genre#" >>zubo_fofa.txt
-cat txt/Gansu_105.txt >>zubo_fofa.txt
-echo "河北联通,#genre#" >>zubo_fofa.txt
-cat txt/Hebei_313.txt >>zubo_fofa.txt
-echo "浙江联通,#genre#" >>zubo_fofa.txt
-cat txt/Zhejiang_121.txt >>zubo_fofa.txt
-
-
-# for a in result/*.txt; do echo "";echo "========================= $(basename "$a") ==================================="; cat $a; done
+# 如果不是处理全部选项，则单独生成合并文件
+if [ "$city_choice" -ne 0 ]; then
+    echo "生成单独的城市合并文件..."
+    echo "上海电信,#genre#" > zubo_fofa.txt
+    [ -f "txt/Shanghai_103.txt" ] && cat "txt/Shanghai_103.txt" >> zubo_fofa.txt
+    echo "江苏,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Jiangsu.txt" ] && cat "txt/Jiangsu.txt" >> zubo_fofa.txt
+    echo "北京联通,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Beijing_liantong_145.txt" ] && cat "txt/Beijing_liantong_145.txt" >> zubo_fofa.txt
+    echo "天津联通,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Tianjin_160.txt" ] && cat "txt/Tianjin_160.txt" >> zubo_fofa.txt
+    echo "河南电信,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Henan_327.txt" ] && cat "txt/Henan_327.txt" >> zubo_fofa.txt
+    echo "山西电信,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Shanxi_117.txt" ] && cat "txt/Shanxi_117.txt" >> zubo_fofa.txt
+    echo "广东电信,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Guangdong_332.txt" ] && cat "txt/Guangdong_332.txt" >> zubo_fofa.txt
+    echo "四川电信,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Sichuan_333.txt" ] && cat "txt/Sichuan_333.txt" >> zubo_fofa.txt
+    echo "浙江电信,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Zhejiang_120.txt" ] && cat "txt/Zhejiang_120.txt" >> zubo_fofa.txt
+    echo "湖北电信,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Hubei_90.txt" ] && cat "txt/Hubei_90.txt" >> zubo_fofa.txt
+    echo "福建电信,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Fujian_114.txt" ] && cat "txt/Fujian_114.txt" >> zubo_fofa.txt
+    echo "湖南电信,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Hunan_282.txt" ] && cat "txt/Hunan_282.txt" >> zubo_fofa.txt
+    echo "甘肃电信,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Gansu_105.txt" ] && cat "txt/Gansu_105.txt" >> zubo_fofa.txt
+    echo "河北联通,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Hebei_313.txt" ] && cat "txt/Hebei_313.txt" >> zubo_fofa.txt
+    echo "浙江联通,#genre#" >> zubo_fofa.txt
+    [ -f "txt/Zhejiang_121.txt" ] && cat "txt/Zhejiang_121.txt" >> zubo_fofa.txt
+fi
