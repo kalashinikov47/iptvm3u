@@ -13,12 +13,12 @@
 # 配置参数
 MAX_FOFA_RETRIES=3        # FOFA 请求最大重试次数
 FOFA_TIMEOUT=15           # FOFA 请求超时（秒）
-FOFA_RETRY_DELAY=55        # FOFA 重试间延迟（秒）- 防止限流
+FOFA_RETRY_DELAY=5        # FOFA 重试间延迟（秒）- 防止限流
 NC_TIMEOUT=2              # netcat 连接超时（秒）
 MAX_TEST_IPS=25           # 最大测试 IP 数量 - 避免测试过多 IP
 MIN_VALID_IPS=1           # 最少需要的有效 IP 数量
-CITY_DELAY_MIN=60         # 城市间最小延迟（秒）- 防止 FOFA 限流（增加到10秒）
-CITY_DELAY_MAX=70         # 城市间最大延迟（秒）- 防止 FOFA 限流（增加到20秒）
+CITY_DELAY_MIN=10         # 城市间最小延迟（秒）- 防止 FOFA 限流（增加到10秒）
+CITY_DELAY_MAX=20         # 城市间最大延迟（秒）- 防止 FOFA 限流（增加到20秒）
 
 # 原有变量定义
 time=$(date +%m%d%H%M)
