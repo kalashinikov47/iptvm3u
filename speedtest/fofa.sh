@@ -16,6 +16,8 @@ FOFA_TIMEOUT=15           # FOFA 请求超时（秒）
 NC_TIMEOUT=2              # netcat 连接超时（秒）
 MAX_TEST_IPS=25           # 最大测试 IP 数量 - 避免测试过多 IP
 MIN_VALID_IPS=1           # 最少需要的有效 IP 数量
+CITY_DELAY_MIN=3          # 城市间最小延迟（秒）- 防止 FOFA 限流
+CITY_DELAY_MAX=8          # 城市间最大延迟（秒）- 防止 FOFA 限流
 
 # 原有变量定义
 time=$(date +%m%d%H%M)
@@ -367,8 +369,26 @@ process_city() {
 # 主逻辑
 if [ "$city_choice" = "0" ]; then
   echo "将处理所有16个城市，这可能需要较长时间..."
+  echo "注意：城市间会有 ${CITY_DELAY_MIN}-${CITY_DELAY_MAX} 秒延迟，以防止 FOFA 限流"
+  
+  city_index=0
+  total_cities=${#all_cities[@]}
+  
   for choice in "${all_cities[@]}"; do
+    ((city_index++))
+    echo ""
+    echo ">>> 正在处理第 $city_index/$total_cities 个城市"
+    
     process_city $choice || echo "城市 $choice 处理失败，继续下一个"
+    
+    # 在处理完一个城市后，添加随机延迟（最后一个城市除外）
+    if [ $city_index -lt $total_cities ]; then
+      # 生成随机延迟时间
+      delay=$((CITY_DELAY_MIN + RANDOM % (CITY_DELAY_MAX - CITY_DELAY_MIN + 1)))
+      echo ""
+      echo "⏳ 等待 ${delay} 秒后继续处理下一个城市（防止 FOFA 限流）..."
+      sleep $delay
+    fi
   done
 else
   process_city $city_choice
