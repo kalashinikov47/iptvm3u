@@ -13,11 +13,12 @@
 # 配置参数
 MAX_FOFA_RETRIES=3        # FOFA 请求最大重试次数
 FOFA_TIMEOUT=15           # FOFA 请求超时（秒）
+FOFA_RETRY_DELAY=5        # FOFA 重试间延迟（秒）- 防止限流
 NC_TIMEOUT=2              # netcat 连接超时（秒）
 MAX_TEST_IPS=25           # 最大测试 IP 数量 - 避免测试过多 IP
 MIN_VALID_IPS=1           # 最少需要的有效 IP 数量
-CITY_DELAY_MIN=3          # 城市间最小延迟（秒）- 防止 FOFA 限流
-CITY_DELAY_MAX=8          # 城市间最大延迟（秒）- 防止 FOFA 限流
+CITY_DELAY_MIN=10         # 城市间最小延迟（秒）- 防止 FOFA 限流（增加到10秒）
+CITY_DELAY_MAX=20         # 城市间最大延迟（秒）- 防止 FOFA 限流（增加到20秒）
 
 # 原有变量定义
 time=$(date +%m%d%H%M)
@@ -192,13 +193,33 @@ process_city() {
   # FOFA 搜索（带重试）
   echo "==> 步骤1: 从 FOFA 检索 IP"
   fofa_success=false
+  
+  # 随机 User-Agent 列表（防止被识别）
+  user_agents=(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0"
+  )
+  
   for retry in $(seq 1 $MAX_FOFA_RETRIES); do
     echo "    尝试 $retry/$MAX_FOFA_RETRIES"
+    
+    # 随机选择 User-Agent
+    ua_index=$((RANDOM % ${#user_agents[@]}))
+    user_agent="${user_agents[$ua_index]}"
     
     if timeout ${FOFA_TIMEOUT}s curl -sSL \
         --connect-timeout 10 \
         --max-time ${FOFA_TIMEOUT} \
-        -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+        -H "User-Agent: ${user_agent}" \
+        -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
+        -H "Accept-Language: zh-CN,zh;q=0.9,en;q=0.8" \
+        -H "Accept-Encoding: gzip, deflate, br" \
+        -H "DNT: 1" \
+        -H "Connection: keep-alive" \
+        -H "Upgrade-Insecure-Requests: 1" \
         -o "test_${city}.html" \
         "$url_fofa" 2>/dev/null; then
       
@@ -214,7 +235,11 @@ process_city() {
       echo "    ✗ FOFA 请求失败"
     fi
     
-    [ $retry -lt $MAX_FOFA_RETRIES ] && sleep 2
+    # 重试前增加延迟（防止限流）
+    if [ $retry -lt $MAX_FOFA_RETRIES ]; then
+      echo "    ⏳ 等待 ${FOFA_RETRY_DELAY} 秒后重试..."
+      sleep $FOFA_RETRY_DELAY
+    fi
   done
   
   if [ "$fofa_success" = false ]; then
