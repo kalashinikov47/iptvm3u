@@ -1,45 +1,67 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# 检查是否提供了 URL 参数
+set -Eeuo pipefail
+IFS=$'\n\t'
+
+# 用法检查
 if [ "$#" -ne 2 ]; then
-    echo "用法: $0 <ip> <stream>"
-    exit 1
+  echo "用法: $0 <ip:port> <stream>"
+  exit 1
 fi
 
-# IPTV 地址
+# 构造 IPTV 地址
 URL="http://$1/$2"
-# 输出文件名
-OUTPUT_FILE="temp_video.mp4" 
 
-# 开始时间
+# 临时输出文件（放到 /tmp，避免仓库变脏）
+OUTPUT_FILE=$(mktemp -p "${TMPDIR:-/tmp}" speedtest_video_XXXXXX.mp4)
+trap 'rm -f "$OUTPUT_FILE" >/dev/null 2>&1 || true' EXIT
+
+# 计时开始
 START_TIME=$(date +%s)
 
-# 使用 ffmpeg 下载视频并保存 10 秒
-ffmpeg -i "$URL" -t 10 -c copy "$OUTPUT_FILE" -y 2>/dev/null
-
-# 检查 ffmpeg 的退出状态
-if [ $? -ne 0 ]; then
-    #echo "下载失败，速度为 0 Mb/s"
-    echo "0"
-    exit 0
+# 限时拉流并保存 10 秒，出错静默
+# -loglevel error: 仅错误输出；-nostdin: 非交互；-rw_timeout 5s（以微秒表示）
+if ! timeout 20s ffmpeg -loglevel error -nostdin -rw_timeout 5000000 -y -i "$URL" -t 10 -c copy "$OUTPUT_FILE" >/dev/null 2>&1; then
+  echo "0"
+  exit 0
 fi
 
-# 结束时间
+# 计时结束
 END_TIME=$(date +%s)
-
-# 计算下载时长
 DURATION=$((END_TIME - START_TIME))
 
-# 获取文件大小（以字节为单位）
-FILE_SIZE=$(stat -c%s "$OUTPUT_FILE")
-# 计算下载速度（字节/秒）
-DOWNLOAD_SPEED=$(echo "scale=2; $FILE_SIZE / $DURATION" | bc)
-# 将下载速度转换为 Mb/s
-DOWNLOAD_SPEED_MBPS=$(echo "scale=2; $DOWNLOAD_SPEED * 8 / 1000000" | bc)
-# 判断 DOWNLOAD_SPEED_MBPS 是否小于 5M，速度太慢的节点不要也罢
-if (( $(echo "$DOWNLOAD_SPEED_MBPS < 5" | bc -l) )); then
-    DOWNLOAD_SPEED_MBPS=0
+# 防止除零
+if [ "$DURATION" -le 0 ]; then
+  echo "0"
+  exit 0
 fi
 
-# 输出结果
+# 文件大小（字节）- 兼容性更好的获取方式
+FILE_SIZE=$(wc -c < "$OUTPUT_FILE" | tr -d '[:space:]')
+if [ -z "$FILE_SIZE" ] || [ "$FILE_SIZE" -le 0 ]; then
+  echo "0"
+  exit 0
+fi
+
+# 可选：按视频帧数过滤，排除几秒就断流的节点（默认阈值 400，可通过 FRAMES_THRESHOLD 覆盖）
+FRAMES_THRESHOLD=${FRAMES_THRESHOLD:-400}
+FRAMES=$(ffprobe -v error -select_streams v:0 -count_packets \
+  -show_entries stream=nb_read_packets -of csv=p=0 "$OUTPUT_FILE" 2>/dev/null || echo "")
+FRAMES=${FRAMES:-0}
+if [ "$FRAMES" -lt "$FRAMES_THRESHOLD" ]; then
+  echo "0"
+  exit 0
+fi
+
+# 计算下载速度（字节/秒 → Mb/s）
+DOWNLOAD_SPEED=$(echo "scale=4; $FILE_SIZE / $DURATION" | bc)
+DOWNLOAD_SPEED_MBPS=$(echo "scale=2; $DOWNLOAD_SPEED * 8 / 1000000" | bc)
+
+# 低速阈值（默认 5 Mb/s，可通过 THRESHOLD_MBPS 覆盖）
+THRESHOLD_MBPS=${THRESHOLD_MBPS:-5}
+if (( $(echo "$DOWNLOAD_SPEED_MBPS < $THRESHOLD_MBPS" | bc -l) )); then
+  DOWNLOAD_SPEED_MBPS=0
+fi
+
+# 输出（保持与上游脚本匹配的格式，便于 grep/awk 过滤）
 echo "$DOWNLOAD_SPEED_MBPS Mb/s"
