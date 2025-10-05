@@ -1,26 +1,13 @@
 #!/bin/bash
+# cd /root/iptv
+# read -p "确定要运行脚本吗？(y/n): " choice
 
-# ============================================================================
-# 优化版 FOFA 搜索和测速脚本
-# 主要改进：
-# 1. 添加 FOFA 请求重试机制和超时控制
-# 2. 优化端口连通性测试（增加超时）
-# 3. 限制测试 IP 数量，提高效率
-# 4. 改进空结果处理，避免脚本失败
-# 5. 添加详细日志输出
-# ============================================================================
+# 判断用户的选择，如果不是"y"则退出脚本
+# if [ "$choice" != "y" ]; then
+#     echo "脚本已取消."
+#     exit 0
+# fi
 
-# 配置参数
-MAX_FOFA_RETRIES=3        # FOFA 请求最大重试次数
-FOFA_TIMEOUT=15           # FOFA 请求超时（秒）
-FOFA_RETRY_DELAY=5        # FOFA 重试间延迟（秒）- 防止限流
-NC_TIMEOUT=2              # netcat 连接超时（秒）
-MAX_TEST_IPS=25           # 最大测试 IP 数量 - 避免测试过多 IP
-MIN_VALID_IPS=1           # 最少需要的有效 IP 数量
-CITY_DELAY_MIN=10         # 城市间最小延迟（秒）- 防止 FOFA 限流（增加到10秒）
-CITY_DELAY_MAX=20         # 城市间最大延迟（秒）- 防止 FOFA 限流（增加到20秒）
-
-# 原有变量定义
 time=$(date +%m%d%H%M)
 i=0
 
@@ -47,25 +34,19 @@ if [ $# -eq 0 ]; then
 
   if [ -z "$city_choice" ]; then
       echo "未检测到输入，自动选择全部选项..."
-      city_choice=0
+      city_choice=4
   fi
+
 else
   city_choice=$1
 fi
 
-# 城市列表（用于选项0）
-declare -a all_cities=(1 2 3 4 6 7 8 9 10 11 12 13 14 15 16)
-
-# 处理单个城市的函数
-process_city() {
-  local choice=$1
-  
-  # 根据选择设置城市和相应的stream
-  case $choice in
+# 根据用户选择设置城市和相应的stream
+case $city_choice in
     1)
         city="Shanghai_103"
         stream="udp/239.45.1.4:5140"
-        channel_key="上海"
+	channel_key="上海"
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Shanghai" && asn="4812" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
@@ -99,7 +80,7 @@ process_city() {
         ;;
     6)
         city="Jiangsu"
-        stream="rtp/239.49.8.132:6000"        
+		stream="rtp/239.49.8.132:6000"		
         channel_key="江苏"
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Jiangsu" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
@@ -107,12 +88,12 @@ process_city() {
     7)
         city="Guangdong_332"
         stream="udp/239.77.1.98:5146"
-        channel_key="广东电信"        
+        channel_key="广东电信"		
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Guangdong" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     8)
-        city="Henan_327"        
+        city="Henan_327"		
         stream="rtp/239.16.20.1:10010"
         channel_key="河南电信"
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Henan" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
@@ -120,355 +101,186 @@ process_city() {
         ;;
     9)
         city="Shanxi_117"
-        stream="rtp/226.0.2.69:9136"
+        stream="udp/239.1.1.7:8007"
         channel_key="山西电信"
-        url_fofa=$(echo  '"udpxy" && country="CN" && region="Shanxi" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
+        url_fofa=$(echo  '"udpxy" && country="CN" && city="Taiyuan" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     10)
         city="Tianjin_160"
-        stream="udp/225.1.1.112:5002"
+        stream="udp/225.1.2.190:5002"
         channel_key="天津联通"
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Tianjin" && asn="4837" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     11)
         city="Hubei_90"
-        stream="rtp/239.69.1.68:9694"
+        stream="rtp/239.69.1.40:9880"
         channel_key="湖北电信"
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Hubei" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     12)
         city="Fujian_114"
-        stream="rtp/239.61.2.155:9022"
+        stream="rtp/239.61.3.61:9884"
         channel_key="福建电信"
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Fujian" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     13)
         city="Hunan_282"
-        stream="udp/239.76.253.100:9000"
+        stream="rtp/239.76.253.151:9000"
         channel_key="湖南电信"
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Hunan" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     14)
         city="Gansu_105"
-        stream="rtp/239.255.30.250:8231"
+        stream="udp/239.81.0.107:4056"
         channel_key="甘肃电信"
-        url_fofa=$(echo  '"udpxy" && country="CN" && region="Gansu" && asn="4134" && protocol="http"' | base64 |tr -d '\n')
+        url_fofa=$(echo  '"udpxy" && country="CN" &&  region="Guangxi Zhuangzu" && ASN="4134" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     15)
         city="Hebei_313"
-        stream="rtp/239.253.92.83:8012"
+        stream="rtp/239.253.92.84:8015"
         channel_key="河北联通"
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Hebei" && asn="4837" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
     16)
         city="Zhejiang_121"
-        stream="rtp/233.50.200.102:5140"
+        stream="rtp/233.50.201.133:5140"
         channel_key="浙江联通"
         url_fofa=$(echo  '"udpxy" && country="CN" && region="Zhejiang" && asn="4837" && protocol="http"' | base64 |tr -d '\n')
         url_fofa="https://fofa.info/result?qbase64="$url_fofa
         ;;
-    *)
-        echo "无效选择: $choice"
-        return 1
+	0)
+        # 如果选择是“全部选项”，则逐个处理每个选项
+        for option in {1..16}; do
+          bash  "$0" $option  # 假定fofa.sh是当前脚本的文件名，$option将递归调用
+        done
+        exit 0
         ;;
-  esac
 
-  echo ""
-  echo "======================================================================="
-  echo "开始处理: ${channel_key} (${city})"
-  echo "======================================================================="
+    *)
+        echo "错误：无效的选择。"
+        exit 16
+        ;;
+esac
 
-  ipfile="ip/${city}.ip"
-  only_good_ip="ip/${city}.onlygood.ip"
-  rm -f $only_good_ip
-  mkdir -p ip result txt
-  
-  # FOFA 搜索（带重试）
-  echo "==> 步骤1: 从 FOFA 检索 IP"
-  fofa_success=false
-  
-  # 随机 User-Agent 列表（防止被识别）
-  user_agents=(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0"
-  )
-  
-  for retry in $(seq 1 $MAX_FOFA_RETRIES); do
-    echo "    尝试 $retry/$MAX_FOFA_RETRIES"
-    
-    # 随机选择 User-Agent
-    ua_index=$((RANDOM % ${#user_agents[@]}))
-    user_agent="${user_agents[$ua_index]}"
-    
-    if timeout ${FOFA_TIMEOUT}s curl -sSL \
-        --connect-timeout 10 \
-        --max-time ${FOFA_TIMEOUT} \
-        -H "User-Agent: ${user_agent}" \
-        -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" \
-        -H "Accept-Language: zh-CN,zh;q=0.9,en;q=0.8" \
-        -H "Accept-Encoding: gzip, deflate, br" \
-        -H "DNT: 1" \
-        -H "Connection: keep-alive" \
-        -H "Upgrade-Insecure-Requests: 1" \
-        -o "test_${city}.html" \
-        "$url_fofa" 2>/dev/null; then
-      
-      # 检查文件是否有内容
-      if [ -s "test_${city}.html" ] && grep -qE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+' "test_${city}.html"; then
-        echo "    ✓ FOFA 搜索成功"
-        fofa_success=true
-        break
-      else
-        echo "    ✗ FOFA 返回空结果"
-      fi
-    else
-      echo "    ✗ FOFA 请求失败"
-    fi
-    
-    # 重试前增加延迟（防止限流）
-    if [ $retry -lt $MAX_FOFA_RETRIES ]; then
-      echo "    ⏳ 等待 ${FOFA_RETRY_DELAY} 秒后重试..."
-      sleep $FOFA_RETRY_DELAY
-    fi
-  done
-  
-  if [ "$fofa_success" = false ]; then
-    echo "警告：${city} FOFA 搜索失败，生成空结果文件"
-    touch "result/result_fofa_${city}.txt"
-    touch "txt/fofa_${city}.txt"
-    rm -f "test_${city}.html"
-    return 0
-  fi
-  
-  # 提取 IP
-  grep -E '^\s*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+$' "test_${city}.html" | \
-    grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+' | \
-    head -n 100 > "$ipfile"
-  rm -f "test_${city}.html"
-  
-  # 检查是否获取到 IP
-  if [ ! -s "$ipfile" ]; then
-    echo "警告：${city} 未获取到任何 IP，生成空结果文件"
-    touch "result/result_fofa_${city}.txt"
-    touch "txt/fofa_${city}.txt"
-    return 0
-  fi
-  
-  ip_count=$(wc -l < "$ipfile")
-  echo "    获取到 $ip_count 个候选 IP"
-  
-  # 端口连通性测试
-  echo "==> 步骤2: 端口连通性测试"
-  tested=0
-  success=0
-  
-  while IFS= read -r ip; do
-    ((tested++))
+
+
+# 使用城市名作为默认文件名，格式为 CityName.ip
+ipfile="ip/${city}.ip"
+only_good_ip="ip/${city}.onlygood.ip"
+rm -f $only_good_ip
+# 搜索最新 IP
+echo "===============从 fofa 检索 ip+端口================="
+curl -o test.html "$url_fofa"
+#echo $url_fofa
+echo "$ipfile"
+grep -E '^\s*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+$' test.html | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+' > "$ipfile"
+rm -f test.html
+# 遍历文件 A 中的每个 IP 地址
+while IFS= read -r ip; do
+    # 尝试连接 IP 地址和端口号，并将输出保存到变量中
     tmp_ip=$(echo -n "$ip" | sed 's/:/ /')
-    
-    if timeout ${NC_TIMEOUT}s nc -w ${NC_TIMEOUT} -z $tmp_ip 2>&1 | grep -q "succeeded"; then
-      echo "$ip" >> "$only_good_ip"
-      ((success++))
-      echo "    [$tested/$ip_count] ✓ $ip"
-    else
-      echo "    [$tested/$ip_count] ✗ $ip"
+    echo "nc -w 1 -v -z $tmp_ip 2>&1"
+    output=$(nc -w 1 -v -z $tmp_ip 2>&1)
+    echo $output    
+    # 如果连接成功，且输出包含 "succeeded"，则将结果保存到输出文件中
+    if [[ $output == *"succeeded"* ]]; then
+        # 使用 awk 提取 IP 地址和端口号对应的字符串，并保存到输出文件中
+        echo "$output" | grep "succeeded" | awk -v ip="$ip" '{print ip}' >> "$only_good_ip"
     fi
-  done < "$ipfile"
-  
-  echo "    连通性测试完成: $success/$tested 可用"
-  
-  # 检查是否有可用 IP
-  if [ ! -f "$only_good_ip" ] || [ ! -s "$only_good_ip" ]; then
-    echo "警告：${city} 无可用 IP，生成空结果文件"
-    touch "result/result_fofa_${city}.txt"
-    touch "txt/fofa_${city}.txt"
-    return 0
-  fi
-  
-  lines=$(wc -l < "$only_good_ip")
-  
-  # 限制测试数量
-  if [ "$lines" -gt "$MAX_TEST_IPS" ]; then
-    echo "    限制测试前 $MAX_TEST_IPS 个 IP"
-    head -n $MAX_TEST_IPS "$only_good_ip" > "${only_good_ip}.tmp"
-    mv "${only_good_ip}.tmp" "$only_good_ip"
-    lines=$MAX_TEST_IPS
-  fi
-  
-  # 速度测试
-  echo "==> 步骤3: 速度测试 ($lines 个 IP)"
-  line_i=0
-  valid_count=0
-  mkdir -p tmpip
-  
-  while read -r line; do
-    ip=$(echo "$line" | sed 's/^[ \t]*//;s/[ \t]*$//')
-    
-    if [ -n "$ip" ]; then
-      echo "$ip" > "tmpip/ip_$line_i.txt"
-      ((line_i++))
-    fi
-  done < "$only_good_ip"
-  
-  line_i=0
-  for temp_file in tmpip/ip_*.txt; do
-    [ ! -f "$temp_file" ] && continue
-    
-    ((line_i++))
-    ip=$(<"$temp_file")
-    
-    # 验证 ip 和 stream 都不为空
-    if [ -z "$ip" ] || [ -z "$stream" ]; then
-      echo "    [$line_i/$lines] 跳过 (参数无效)"
-      continue
-    fi
-    
-    echo -n "    [$line_i/$lines] 测试 $ip ... "
-    a=$(./speed.sh "$ip" "$stream" 2>/dev/null || echo "0 Mb/s")
-    
-    # 只记录有效结果
-    if [[ "$a" != "0 Mb/s" ]] && [[ "$a" != "0.00 Mb/s" ]]; then
-      echo "$ip $a" >> "speedtest_${city}_$time.log"
-      ((valid_count++))
-      echo "✓ $a"
-    else
-      echo "✗ 无效"
-    fi
-  done
-  
-  rm -rf tmpip/*
-  echo "    速度测试完成: $valid_count/$lines 有效"
-  
-  # 生成结果文件
-  echo "==> 步骤4: 生成结果文件"
-  
-  # 如果没有有效结果，创建空文件
-  if [ ! -f "speedtest_${city}_$time.log" ]; then
-    touch "result/result_fofa_${city}.txt"
-    touch "txt/fofa_${city}.txt"
-    echo "    警告: 无有效测速结果"
-    return 0
-  fi
-  
-  awk '/M|k/{print $2"  "$1}' "speedtest_${city}_$time.log" | sort -n -r > "result/result_fofa_${city}.txt"
-  
-  # 显示结果
-  if [ -s "result/result_fofa_${city}.txt" ]; then
-    echo "    前3名:"
-    head -n 3 "result/result_fofa_${city}.txt" | nl
-  fi
-  
-  ip1=$(awk 'NR==1{print $2}' result/result_fofa_${city}.txt)
-  ip2=$(awk 'NR==2{print $2}' result/result_fofa_${city}.txt)
-  ip3=$(awk 'NR==3{print $2}' result/result_fofa_${city}.txt)
-  rm -f "speedtest_${city}_$time.log"
-  
-  # 用 3 个最快 ip 生成对应城市的 txt 文件
-  program="template/template_${city}.txt"
-  
-  if [ ! -f "$program" ]; then
-    echo "    警告: 模板文件不存在: $program"
-    touch "txt/fofa_${city}.txt"
-    return 0
-  fi
-  
-  sed "s/ipipip/$ip1/g" "$program" > tmp1.txt
-  sed "s/ipipip/$ip2/g" "$program" > tmp2.txt
-  sed "s/ipipip/$ip3/g" "$program" > tmp3.txt
-  cat tmp1.txt tmp2.txt tmp3.txt > "txt/fofa_${city}.txt"
-  rm -rf tmp1.txt tmp2.txt tmp3.txt
-  
-  echo "    ✓ 完成"
-}
+done < "$ipfile"
 
-# 主逻辑
-if [ "$city_choice" = "0" ]; then
-  echo "将处理所有16个城市，这可能需要较长时间..."
-  echo "注意：城市间会有 ${CITY_DELAY_MIN}-${CITY_DELAY_MAX} 秒延迟，以防止 FOFA 限流"
-  
-  city_index=0
-  total_cities=${#all_cities[@]}
-  
-  for choice in "${all_cities[@]}"; do
-    ((city_index++))
-    echo ""
-    echo ">>> 正在处理第 $city_index/$total_cities 个城市"
-    
-    process_city $choice || echo "城市 $choice 处理失败，继续下一个"
-    
-    # 在处理完一个城市后，添加随机延迟（最后一个城市除外）
-    if [ $city_index -lt $total_cities ]; then
-      # 生成随机延迟时间
-      delay=$((CITY_DELAY_MIN + RANDOM % (CITY_DELAY_MAX - CITY_DELAY_MIN + 1)))
-      echo ""
-      echo "⏳ 等待 ${delay} 秒后继续处理下一个城市（防止 FOFA 限流）..."
-      sleep $delay
-    fi
-  done
-else
-  process_city $city_choice
+echo "===============检索完成================="
+
+# 检查文件是否存在
+if [ ! -f "$only_good_ip" ]; then
+    echo "错误：文件 $only_good_ip 不存在。"
+    exit 1
 fi
 
-# 合并所有城市的txt文件
-echo ""
-echo "======================================================================="
-echo "合并所有城市结果到 zubo_fofa.txt"
-echo "======================================================================="
+lines=$(wc -l < "$only_good_ip")
+echo "【$only_good_ip】内 ip 共计 $lines 个"
 
-echo "上海电信,#genre#" > zubo_fofa.txt
-cat txt/fofa_Shanghai_103.txt >> zubo_fofa.txt 2>/dev/null || true
+line_i=0
+mkdir -p tmpip
+while read -r line; do
+    ip=$(echo "$line" | sed 's/^[ \t]*//;s/[ \t]*$//')  # 去除首尾空格
+    
+    # 如果行不为空，则写入临时文件
+    if [ -n "$ip" ]; then
+        echo "$ip" > "tmpip/ip_$line_i.txt"  # 保存为 tmpip 目录下的临时文件
+        ((line_i++))
+    fi
+done < "$only_good_ip"
 
-echo "江苏,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Jiangsu.txt >> zubo_fofa.txt 2>/dev/null || true
+line_i=0
+for temp_file in tmpip/ip_*.txt; do
+      ((line_i++))
+     ip=$(<"$temp_file")  # 从临时文件中读取 IP 地址
+     a=$(./speed.sh "$ip" "$stream")
+     echo "第 $line_i/$lines 个：$ip $a"
+     echo "$ip $a" >> "speedtest_${city}_$time.log"
+done
+rm -rf tmpip/*
 
-echo "北京联通,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Beijing_liantong_145.txt >> zubo_fofa.txt 2>/dev/null || true
+awk '/M|k/{print $2"  "$1}' "speedtest_${city}_$time.log" | sort -n -r >"result/result_fofa_${city}.txt"
+cat "result/result_fofa_${city}.txt"
+ip1=$(awk 'NR==1{print $2}' result/result_fofa_${city}.txt)
+ip2=$(awk 'NR==2{print $2}' result/result_fofa_${city}.txt)
+ip3=$(awk 'NR==3{print $2}' result/result_fofa_${city}.txt)
+rm -f "speedtest_${city}_$time.log"
 
-echo "天津联通,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Tianjin_160.txt >> zubo_fofa.txt 2>/dev/null || true
+# 用 3 个最快 ip 生成对应城市的 txt 文件
+program="template/template_${city}.txt"
 
-echo "河南电信,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Henan_327.txt >> zubo_fofa.txt 2>/dev/null || true
+sed "s/ipipip/$ip1/g" "$program" > tmp1.txt
+sed "s/ipipip/$ip2/g" "$program" > tmp2.txt
+sed "s/ipipip/$ip3/g" "$program" > tmp3.txt
+cat tmp1.txt tmp2.txt tmp3.txt > "txt/fofa_${city}.txt"
 
-echo "山西电信,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Shanxi_117.txt >> zubo_fofa.txt 2>/dev/null || true
+rm -rf tmp1.txt tmp2.txt tmp3.txt
 
-echo "广东电信,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Guangdong_332.txt >> zubo_fofa.txt 2>/dev/null || true
 
-echo "四川电信,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Sichuan_333.txt >> zubo_fofa.txt 2>/dev/null || true
+#--------------------合并所有城市的txt文件为:   zubo_fofa.txt-----------------------------------------
 
-echo "浙江电信,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Zhejiang_120.txt >> zubo_fofa.txt 2>/dev/null || true
+echo "上海电信,#genre#" >zubo_fofa.txt
+cat txt/Shanghai_103.txt >>zubo_fofa.txt
+echo "江苏,#genre#" >>zubo_fofa.txt
+cat txt/Jiangsu.txt >>zubo_fofa.txt
+#echo "北京电信,#genre#" >>zubo_fofa.txt
+#cat txt/Beijing_dianxin_186.txt >>zubo_fofa.txt
+echo "北京联通,#genre#" >>zubo_fofa.txt
+cat txt/Beijing_liantong_145.txt >>zubo_fofa.txt
+echo "天津联通,#genre#" >>zubo_fofa.txt
+cat txt/Tianjin_160.txt >>zubo_fofa.txt
+echo "河南电信,#genre#" >>zubo_fofa.txt
+cat txt/Henan_327.txt >>zubo_fofa.txt
+echo "山西电信,#genre#" >>zubo_fofa.txt
+cat txt/Shanxi_117.txt >>zubo_fofa.txt
+echo "广东电信,#genre#" >>zubo_fofa.txt
+cat txt/Guangdong_332.txt >>zubo_fofa.txt
+echo "四川电信,#genre#" >>zubo_fofa.txt
+cat txt/Sichuan_333.txt >>zubo_fofa.txt
+echo "浙江电信,#genre#" >>zubo_fofa.txt
+cat txt/Zhejiang_120.txt >>zubo_fofa.txt
+echo "湖北电信,#genre#" >>zubo_fofa.txt
+cat txt/Hubei_90.txt >>zubo_fofa.txt
+echo "福建电信,#genre#" >>zubo_fofa.txt
+cat txt/Fujian_114.txt >>zubo_fofa.txt
+echo "湖南电信,#genre#" >>zubo_fofa.txt
+cat txt/Hunan_282.txt >>zubo_fofa.txt
+echo "甘肃电信,#genre#" >>zubo_fofa.txt
+cat txt/Gansu_105.txt >>zubo_fofa.txt
+echo "河北联通,#genre#" >>zubo_fofa.txt
+cat txt/Hebei_313.txt >>zubo_fofa.txt
+echo "浙江联通,#genre#" >>zubo_fofa.txt
+cat txt/Zhejiang_121.txt >>zubo_fofa.txt
 
-echo "湖北电信,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Hubei_90.txt >> zubo_fofa.txt 2>/dev/null || true
 
-echo "福建电信,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Fujian_114.txt >> zubo_fofa.txt 2>/dev/null || true
-
-echo "湖南电信,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Hunan_282.txt >> zubo_fofa.txt 2>/dev/null || true
-
-echo "甘肃电信,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Gansu_105.txt >> zubo_fofa.txt 2>/dev/null || true
-
-echo "河北联通,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Hebei_313.txt >> zubo_fofa.txt 2>/dev/null || true
-
-echo "浙江联通,#genre#" >> zubo_fofa.txt
-cat txt/fofa_Zhejiang_121.txt >> zubo_fofa.txt 2>/dev/null || true
-
-echo "✓ 合并完成！生成文件: zubo_fofa.txt"
-echo ""
+# for a in result/*.txt; do echo "";echo "========================= $(basename "$a") ==================================="; cat $a; done
